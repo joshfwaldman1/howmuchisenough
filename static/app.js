@@ -58,6 +58,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentStep > 1) showStep(currentStep - 1);
     });
 
+    // Prevent Enter key from submitting the form on intermediate steps.
+    // Instead, advance to the next step — only allow submission on the final step.
+    const form = document.getElementById('lifestyle-form');
+    form.addEventListener('submit', (e) => {
+        if (currentStep < totalSteps) {
+            e.preventDefault();
+            showStep(currentStep + 1);
+        }
+    });
+
     // Initialize
     showStep(1);
 
