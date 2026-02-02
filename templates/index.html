@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}How Much Is Enough?{% endblock %}
+
+{% block content %}
+<div class="wizard-container">
+    <div class="intro-text">
+        <p>
+            Design your absolute dream lifestyle — homes, vacations, boats, everything —
+            for you, your children, and even your grandchildren.
+            We'll calculate exactly how much wealth you'd need.
+            <strong>Spoiler: it's far less than a billion dollars.</strong>
+        </p>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="progress-bar">
+        <div class="progress-step active" data-step="1">
+            <div class="step-number">1</div>
+            <div class="step-label">About You</div>
+        </div>
+        <div class="progress-line"></div>
+        <div class="progress-step" data-step="2">
+            <div class="step-number">2</div>
+            <div class="step-label">Housing</div>
+        </div>
+        <div class="progress-line"></div>
+        <div class="progress-step" data-step="3">
+            <div class="step-number">3</div>
+            <div class="step-label">Lifestyle</div>
+        </div>
+        <div class="progress-line"></div>
+        <div class="progress-step" data-step="4">
+            <div class="step-number">4</div>
+            <div class="step-label">Family</div>
+        </div>
+    </div>
+
+    <form action="/calculate" method="POST" id="lifestyle-form">
+
+        <!-- ============================================ -->
+        <!-- STEP 1: About You                            -->
+        <!-- ============================================ -->
+        <div class="step-content active" data-step="1">
+            <div class="step-header">
+                <h2>Let's start with you</h2>
+                <p>Just one question to kick things off.</p>
+            </div>
+
+            <div class="form-group">
+                <label for="user_age">How old are you?</label>
+                <input type="number" id="user_age" name="user_age"
+                       value="40" min="18" max="100" class="input-compact">
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- STEP 2: Housing                              -->
+        <!-- ============================================ -->
+        <div class="step-content" data-step="2">
+            <div class="step-header">
+                <h2>Your Dream Home</h2>
+                <p>Where would you live if money were no object?</p>
+            </div>
+
+            <div class="form-group">
+                <label for="primary_home_location">Primary home — where?</label>
+                <select id="primary_home_location" name="primary_home_location">
+                    <option value="">— Select a location —</option>
+                    {% for loc in primary_locations %}
+                    <option value="{{ loc }}"
+                        {% if loc == "Palo Alto, CA" %}selected{% endif %}>{{ loc }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="primary_home_bedrooms">How many bedrooms?</label>
+                <select id="primary_home_bedrooms" name="primary_home_bedrooms">
+                    <option value="2">2 bedrooms</option>
+                    <option value="3">3 bedrooms</option>
+                    <option value="4" selected>4 bedrooms</option>
+                    <option value="5">5 bedrooms</option>
+                    <option value="6">6 bedrooms</option>
+                </select>
+            </div>
+
+            <div class="form-group toggle-row">
+                <span class="toggle-text">Want a vacation home?</span>
+                <label class="toggle">
+                    <input type="checkbox" name="has_vacation_home" id="has_vacation_home">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="conditional-section" id="vacation-home-section">
+                <div class="form-group">
+                    <label for="vacation_home_location">Vacation home — where?</label>
+                    <select id="vacation_home_location" name="vacation_home_location">
+                        {% for loc in vacation_locations %}
+                        <option value="{{ loc }}"
+                            {% if loc == "Hawaii (Maui)" %}selected{% endif %}>{{ loc }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="vacation_home_bedrooms">Bedrooms?</label>
+                    <select id="vacation_home_bedrooms" name="vacation_home_bedrooms">
+                        <option value="2">2 bedrooms</option>
+                        <option value="3">3 bedrooms</option>
+                        <option value="4" selected>4 bedrooms</option>
+                        <option value="5">5 bedrooms</option>
+                        <option value="6">6 bedrooms</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- STEP 3: Lifestyle                            -->
+        <!-- ============================================ -->
+        <div class="step-content" data-step="3">
+            <div class="step-header">
+                <h2>The Good Life</h2>
+                <p>Vacations, toys, and day-to-day spending.</p>
+            </div>
+
+            <div class="form-group">
+                <label for="annual_expenses">Annual living expenses</label>
+                <div class="input-with-prefix">
+                    <span class="prefix">$</span>
+                    <input type="text" id="annual_expenses" name="annual_expenses"
+                           value="300,000" class="input-currency"
+                           inputmode="numeric">
+                </div>
+                <span class="hint">Food, clothing, entertainment, healthcare, etc.</span>
+            </div>
+
+            <hr class="section-divider">
+
+            <h3 class="subsection-title">Vacations</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="vacations_per_year">Trips per year</label>
+                    <select id="vacations_per_year" name="vacations_per_year">
+                        <option value="0">None</option>
+                        <option value="1">1</option>
+                        <option value="2" selected>2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="6">6</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="vacation_weeks_each">Duration each</label>
+                    <select id="vacation_weeks_each" name="vacation_weeks_each">
+                        <option value="1">1 week</option>
+                        <option value="2">2 weeks</option>
+                        <option value="3" selected>3 weeks</option>
+                        <option value="4">4 weeks</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="vacation_destination">Destination</label>
+                    <select id="vacation_destination" name="vacation_destination">
+                        {% for dest in vacation_destinations %}
+                        <option value="{{ dest }}"
+                            {% if dest == "Europe" %}selected{% endif %}>{{ dest }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="vacation_hotel_tier">Hotel tier</label>
+                    <select id="vacation_hotel_tier" name="vacation_hotel_tier">
+                        {% for tier in hotel_tiers %}
+                        <option value="{{ tier }}"
+                            {% if "Four Seasons" in tier %}selected{% endif %}>{{ tier }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <h3 class="subsection-title">Watercraft</h3>
+
+            <div class="form-group toggle-row">
+                <span class="toggle-text">Sailboat?</span>
+                <label class="toggle">
+                    <input type="checkbox" name="has_sailboat" id="has_sailboat">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="conditional-section" id="sailboat-section">
+                <div class="form-group">
+                    <label for="sailboat_length">Length (feet)</label>
+                    <input type="number" id="sailboat_length" name="sailboat_length"
+                           value="35" min="20" max="80" class="input-compact">
+                </div>
+            </div>
+
+            <div class="form-group toggle-row">
+                <span class="toggle-text">Motor yacht?</span>
+                <label class="toggle">
+                    <input type="checkbox" name="has_yacht" id="has_yacht">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="conditional-section" id="yacht-section">
+                <div class="form-group">
+                    <label for="yacht_length">Length (feet)</label>
+                    <input type="number" id="yacht_length" name="yacht_length"
+                           value="60" min="30" max="250" class="input-compact">
+                </div>
+                <div class="form-group toggle-row">
+                    <span class="toggle-text">Full-time crew?</span>
+                    <label class="toggle">
+                        <input type="checkbox" name="yacht_crew" id="yacht_crew">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <h3 class="subsection-title">Anything else?</h3>
+            <div class="form-group">
+                <label for="custom_expense_description">Description (optional)</label>
+                <input type="text" id="custom_expense_description"
+                       name="custom_expense_description"
+                       placeholder="e.g. Private jet charter, art collection...">
+            </div>
+            <div class="form-group">
+                <label for="custom_annual_expense">Annual cost</label>
+                <div class="input-with-prefix">
+                    <span class="prefix">$</span>
+                    <input type="text" id="custom_annual_expense"
+                           name="custom_annual_expense" value="0"
+                           class="input-currency" inputmode="numeric">
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- STEP 4: Family                               -->
+        <!-- ============================================ -->
+        <div class="step-content" data-step="4">
+            <div class="step-header">
+                <h2>Your Legacy</h2>
+                <p>What would you provide for your children and grandchildren?</p>
+            </div>
+
+            <div class="form-group">
+                <label for="num_children">How many children do you have (or expect)?</label>
+                <select id="num_children" name="num_children">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2" selected>2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+            </div>
+
+            <div id="children-container">
+                <!-- Dynamically populated by JavaScript -->
+            </div>
+
+            <div id="grandchildren-section" style="display:none">
+                <hr class="section-divider">
+                <h3 class="subsection-title">Grandchildren</h3>
+
+                <div class="form-group toggle-row">
+                    <span class="toggle-text">Provide for grandchildren too?</span>
+                    <label class="toggle">
+                        <input type="checkbox" name="provide_for_grandchildren"
+                               id="provide_for_grandchildren">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="conditional-section" id="gc-details-section">
+                    <div class="form-group">
+                        <label for="grandchildren_per_child">
+                            Expected grandchildren per child
+                        </label>
+                        <select id="grandchildren_per_child" name="grandchildren_per_child">
+                            <option value="1">1</option>
+                            <option value="2" selected>2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                        </select>
+                    </div>
+                    <p class="hint">
+                        We'll assume each grandchild gets the same provisions as your children
+                        (education, housing, and living expenses).
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- Navigation                                   -->
+        <!-- ============================================ -->
+        <div class="wizard-nav">
+            <button type="button" id="prev-btn" class="btn btn-secondary" style="visibility:hidden">
+                &larr; Back
+            </button>
+            <button type="button" id="next-btn" class="btn btn-primary">
+                Next &rarr;
+            </button>
+            <button type="submit" id="calculate-btn" class="btn btn-gold" style="display:none">
+                Calculate My Number
+            </button>
+        </div>
+
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// =====================================================
+// Locations data (passed from server for child forms)
+// =====================================================
+const ALL_LOCATIONS = {{ all_locations | tojson }};
+</script>
+<script src="/static/app.js"></script>
+{% endblock %}

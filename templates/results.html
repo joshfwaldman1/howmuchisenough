@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Your Number — How Much Is Enough?{% endblock %}
+
+{% block content %}
+<div class="results-container">
+
+    <!-- ============================================ -->
+    <!-- Hero number                                  -->
+    <!-- ============================================ -->
+    <div class="hero-section">
+        <p class="hero-label">To live your dream lifestyle forever, you need</p>
+        <h2 class="hero-number">{{ total | currency }}</h2>
+        <div class="hero-comparison">
+            <p>
+                That's <strong>{{ pct_of_billion | pct }}</strong> of one billion dollars.
+            </p>
+            <p>
+                A billionaire could fund
+                <strong>{{ families_funded }}</strong>
+                families living your exact dream lifestyle.
+            </p>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- Breakdown                                    -->
+    <!-- ============================================ -->
+    <div class="card">
+        <h3>Where the money goes</h3>
+
+        <div class="chart-breakdown-row">
+            <div class="chart-wrapper">
+                <canvas id="breakdown-chart" width="300" height="300"></canvas>
+            </div>
+
+            <div class="breakdown-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th class="text-right">Amount</th>
+                            <th class="text-right">Share</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cat in categories %}
+                        <tr>
+                            <td>
+                                <span class="color-dot" style="background:{{ loop.index0 | chart_color }}"></span>
+                                {{ cat.name }}
+                            </td>
+                            <td class="text-right">{{ cat.value | currency }}</td>
+                            <td class="text-right">{{ (cat.value / total) | pct }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td><strong>Total</strong></td>
+                            <td class="text-right"><strong>{{ total | currency }}</strong></td>
+                            <td class="text-right"><strong>100%</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- What a billionaire could do instead          -->
+    <!-- ============================================ -->
+    <div class="card impact-card">
+        <h3>What could a billionaire do with the rest?</h3>
+        <p class="impact-intro">
+            After funding your entire dream lifestyle, there would be
+            <strong>{{ leftover | currency }}</strong> left over. That's enough to:
+        </p>
+        <div class="impact-grid">
+            <div class="impact-item">
+                <div class="impact-number">{{ "{:,}".format(stanford_scholarships) }}</div>
+                <div class="impact-label">full-ride scholarships at Stanford</div>
+                <div class="impact-detail">(4 years of tuition, room &amp; board)</div>
+            </div>
+            <div class="impact-item">
+                <div class="impact-number">{{ "{:,}".format(affordable_homes) }}</div>
+                <div class="impact-label">affordable housing units</div>
+                <div class="impact-detail">(at $250K per unit)</div>
+            </div>
+            <div class="impact-item">
+                <div class="impact-number">{{ "{:,}".format(teacher_salaries) }}</div>
+                <div class="impact-label">teacher salaries for a year</div>
+                <div class="impact-detail">(at $65K average salary)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- Economic assumptions                         -->
+    <!-- ============================================ -->
+    <div class="card assumptions-card">
+        <h3>
+            Economic Assumptions
+            <button class="toggle-assumptions" id="toggle-assumptions" type="button">
+                Show details
+            </button>
+        </h3>
+        <p class="assumptions-intro">
+            This calculator uses <strong>conservative</strong> assumptions — meaning it likely
+            <em>overstates</em> how much you need. Even so, the total is far less than a
+            billion dollars.
+        </p>
+        <div class="assumptions-details" id="assumptions-details">
+            <table class="assumptions-table">
+                {% for a in assumptions.describe() %}
+                <tr>
+                    <td class="assumption-label">{{ a.label }}</td>
+                    <td class="assumption-value">{{ a.value }}</td>
+                    <td class="assumption-detail">{{ a.detail }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- Start over                                   -->
+    <!-- ============================================ -->
+    <div class="start-over">
+        <a href="/" class="btn btn-primary">Start Over</a>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Chart colors (matched to CSS)
+const CHART_COLORS = [
+    '#1a365d', '#c6922e', '#2d6a4f', '#9b2226',
+    '#4a5568', '#6b46c1', '#d97706', '#0891b2', '#be185d'
+];
+
+// Build the pie chart
+const ctx = document.getElementById('breakdown-chart').getContext('2d');
+const categories = {{ categories | tojson }};
+
+new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: categories.map(c => c.name),
+        datasets: [{
+            data: categories.map(c => c.value),
+            backgroundColor: CHART_COLORS.slice(0, categories.length),
+            borderWidth: 2,
+            borderColor: '#ffffff',
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const val = context.parsed;
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const pct = ((val / total) * 100).toFixed(1);
+                        let label = '';
+                        if (val >= 1e9) label = '$' + (val / 1e9).toFixed(1) + 'B';
+                        else if (val >= 1e6) label = '$' + (val / 1e6).toFixed(1) + 'M';
+                        else label = '$' + (val / 1e3).toFixed(0) + 'K';
+                        return context.label + ': ' + label + ' (' + pct + '%)';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Toggle assumptions details
+const toggleBtn = document.getElementById('toggle-assumptions');
+const details = document.getElementById('assumptions-details');
+toggleBtn.addEventListener('click', () => {
+    const isHidden = details.style.display === 'none' || !details.style.display;
+    details.style.display = isHidden ? 'block' : 'none';
+    toggleBtn.textContent = isHidden ? 'Hide details' : 'Show details';
+});
+// Start hidden
+details.style.display = 'none';
+</script>
+{% endblock %}
